@@ -14,9 +14,13 @@ fn main() {
         WIDTH,
         HEIGHT,
         TITLE,
-        glfw::WindowMode::Windowed,
+        gl_utils::WindowMode::Windowed,
         None
     );
+
+    println!("Keybinds:");
+    println!("  ESCAPE - Close the window");
+    println!("  P      - Toggle between fill and wireframe mode");
 
     render_loop(&mut glfw, &mut window);
 }

@@ -3,6 +3,11 @@ use gl::types::GLint;
 use glfw::Context;
 use std::ptr::null_mut;
 
+pub enum WindowMode {
+    Windowed,
+    Fullscreen,
+}
+
 /// Initializes glfw, creates a window and loads OpenGL function pointers. The default window size
 /// callback, which updates the OpenGL viewport on window resize, is used if no custom callback is
 /// provided.
@@ -14,7 +19,7 @@ pub fn init_window(
     width: u32,
     height: u32,
     title: &str,
-    window_mode: glfw::WindowMode,
+    window_mode: WindowMode,
     window_size_callback: Option<fn(&mut glfw::Window, i32, i32)>,
 ) -> (glfw::Glfw, glfw::PWindow) {
     // Initialize glfw with OpenGL settings
@@ -27,9 +32,29 @@ pub fn init_window(
     glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
 
     // Create a window
-    let (mut window, _) = glfw
-        .create_window(width, height, title, window_mode)
-        .expect("Failed to create window");
+    let (mut window, _) = match window_mode {
+        WindowMode::Windowed => {
+            if width == 0 || height == 0 {
+                panic!("Window dimensions must be greater than zero in windowed mode");
+            }
+
+            glfw
+                .create_window(width, height, title, glfw::WindowMode::Windowed)
+                .expect("Failed to create window")
+        },
+
+        WindowMode::Fullscreen => glfw.with_primary_monitor(|glfw, m| {
+            glfw.create_window(
+                800,
+                600,
+                title,
+                m.map_or(glfw::WindowMode::Windowed, |m| {
+                    glfw::WindowMode::FullScreen(m)
+                }),
+            )
+            .expect("Failed to create window")
+        }),
+    };
 
     // Set the window the current OpenGL target
     window.make_current();
@@ -49,8 +74,10 @@ pub fn init_window(
     });
 
     // Set viewport settings
+    let (screen_width, screen_height) = window.get_framebuffer_size();
     unsafe {
-        gl::Viewport(0, 0, width as i32, height as i32);
+        // Set the viewport to cover the whole window
+        gl::Viewport(0, 0, screen_width, screen_height);
     }
 
     (glfw, window)
@@ -62,7 +89,6 @@ fn default_framebuffer_size_callback(_: &mut glfw::Window, new_width: i32, new_h
         gl::Viewport(0, 0, new_width, new_height);
     }
 }
-
 
 /// Creates a shader object, applies the source to the object and compiles the shader checking if
 /// the compilation was succesful.
