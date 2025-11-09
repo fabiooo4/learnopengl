@@ -3,7 +3,9 @@ use gl::types::GLint;
 use glfw::Context;
 use std::ptr::null_mut;
 
-/// Initializes glfw, creates a window and loads OpenGL function pointers.
+/// Initializes glfw, creates a window and loads OpenGL function pointers. The default window size
+/// callback, which updates the OpenGL viewport on window resize, is used if no custom callback is
+/// provided.
 /// Returns the glfw instance and the created window.
 ///
 /// # Panics
@@ -33,8 +35,9 @@ pub fn init_window(
     window.make_current();
 
     // Resize callback
-    if let Some(window_size_callback) = window_size_callback {
-        window.set_size_callback(window_size_callback);
+    match window_size_callback {
+        None => window.set_size_callback(default_framebuffer_size_callback),
+        Some(callback) => window.set_size_callback(callback),
     }
 
     // Load OpenGL symbols
@@ -52,6 +55,14 @@ pub fn init_window(
 
     (glfw, window)
 }
+
+/// Default framebuffer size callback that updates the OpenGL viewport when the window is resized.
+fn default_framebuffer_size_callback(_: &mut glfw::Window, new_width: i32, new_height: i32) {
+    unsafe {
+        gl::Viewport(0, 0, new_width, new_height);
+    }
+}
+
 
 /// Creates a shader object, applies the source to the object and compiles the shader checking if
 /// the compilation was succesful.

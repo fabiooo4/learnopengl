@@ -1,7 +1,7 @@
 mod gl_utils;
 
 use gl::types::{GLint, GLsizei};
-use glfw::{self, Action, Context, Key, PWindow, Window};
+use glfw::{self, Action, Context, Key, PWindow};
 use std::{ffi::c_void, ptr::null};
 
 const WIDTH: u32 = 800;
@@ -15,17 +15,10 @@ fn main() {
         HEIGHT,
         TITLE,
         glfw::WindowMode::Windowed,
-        Some(framebuffer_size_callback),
+        None
     );
 
     render_loop(&mut glfw, &mut window);
-}
-
-/// Handles a window resize
-fn framebuffer_size_callback(_: &mut Window, new_width: i32, new_height: i32) {
-    unsafe {
-        gl::Viewport(0, 0, new_width, new_height);
-    }
 }
 
 fn render_loop(glfw: &mut glfw::Glfw, window: &mut PWindow) {
