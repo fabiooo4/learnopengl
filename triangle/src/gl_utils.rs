@@ -1,0 +1,93 @@
+use core::str;
+use std::ptr::null_mut;
+use gl::types::GLint;
+
+/// Creates a shader object, applies the source to the object and compiles the shader checking if
+/// the compilation was succesful
+///
+/// Returns the shader object id
+pub fn create_shader(shader_src: &str, shader_type: gl::types::GLenum) -> Result<u32, String> {
+    let vertex_shader = unsafe { gl::CreateShader(shader_type) };
+
+    let mut success = 0;
+    let mut info_log: [i8; 512] = [0; 512];
+
+    unsafe {
+        // Set shader source to shader object
+        gl::ShaderSource(
+            vertex_shader,
+            1,
+            &(shader_src.as_ptr() as *const i8),
+            &(shader_src.len() as GLint),
+        );
+
+        // Compile the shader
+        gl::CompileShader(vertex_shader);
+
+        // Check compilation errors
+        gl::GetShaderiv(vertex_shader, gl::COMPILE_STATUS, &mut success);
+
+        if success == 0 {
+            gl::GetShaderInfoLog(
+                vertex_shader,
+                info_log.len() as i32,
+                null_mut(),
+                info_log.as_mut_ptr(),
+            );
+
+            return Err(format!(
+                "Error: Shader compilation failed\n{}",
+                str::from_utf8(&info_log.map(|c| c as u8))
+                    .expect("Failed to convert info log to string")
+            ));
+        }
+    };
+
+    Ok(vertex_shader)
+}
+
+/// Creates a program object, links all the provided shader objects and checks if the linking was
+/// successful
+///
+/// Returns the program object id
+pub fn link_program(shaders: &[u32]) -> Result<u32, String> {
+    let shader_program: u32 = unsafe { gl::CreateProgram() };
+
+    let mut success = 0;
+    let mut info_log: [i8; 512] = [0; 512];
+
+    unsafe {
+        // Attach all shaders to the program
+        for &shader in shaders {
+            gl::AttachShader(shader_program, shader);
+        }
+
+        // Link the attached shaderss
+        gl::LinkProgram(shader_program);
+
+        // Check compilation errors
+        gl::GetProgramiv(shader_program, gl::LINK_STATUS, &mut success);
+
+        if success == 0 {
+            gl::GetProgramInfoLog(
+                shader_program,
+                info_log.len() as i32,
+                null_mut(),
+                info_log.as_mut_ptr(),
+            );
+
+            return Err(format!(
+                "Error: Program linking failed\n{}",
+                str::from_utf8(&info_log.map(|c| c as u8))
+                    .expect("Failed to convert info log to string")
+            ));
+        }
+    };
+
+    // Remove all the shaders objects
+    for &shader in shaders {
+        unsafe { gl::DeleteShader(shader) };
+    }
+
+    Ok(shader_program)
+}
