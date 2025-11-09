@@ -15,7 +15,7 @@ fn main() {
         HEIGHT,
         TITLE,
         glfw::WindowMode::Windowed,
-        framebuffer_size_callback,
+        Some(framebuffer_size_callback),
     );
 
     render_loop(&mut glfw, &mut window);

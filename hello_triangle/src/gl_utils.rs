@@ -13,7 +13,7 @@ pub fn init_window(
     height: u32,
     title: &str,
     window_mode: glfw::WindowMode,
-    window_size_callback: fn(&mut glfw::Window, i32, i32),
+    window_size_callback: Option<fn(&mut glfw::Window, i32, i32)>,
 ) -> (glfw::Glfw, glfw::PWindow) {
     // Initialize glfw with OpenGL settings
     let mut glfw = glfw::init(glfw::fail_on_errors).expect("Failed to initialize glfw");
@@ -31,8 +31,11 @@ pub fn init_window(
 
     // Set the window the current OpenGL target
     window.make_current();
+
     // Resize callback
-    window.set_size_callback(window_size_callback);
+    if let Some(window_size_callback) = window_size_callback {
+        window.set_size_callback(window_size_callback);
+    }
 
     // Load OpenGL symbols
     gl::load_with(|s| {
