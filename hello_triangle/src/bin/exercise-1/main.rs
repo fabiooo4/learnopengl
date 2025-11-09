@@ -6,16 +6,16 @@ use std::{ffi::c_void, ptr::null};
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
-const TITLE: &str = "HELLO TRIANGLE!";
+const TITLE: &str = "Hello Triangle - Exercise 1";
 static mut PREVIOUS_KEY_STATE: Action = Action::Release;
 
 fn main() {
-    let (mut glfw, mut window) = gl_utils::init_window(
-        WIDTH,
-        HEIGHT,
-        TITLE,
-        gl_utils::WindowMode::Windowed,
-        None
+    let (mut glfw, mut window) =
+        gl_utils::init_window(WIDTH, HEIGHT, TITLE, gl_utils::WindowMode::Windowed, None);
+
+    println!("Exercise instructions:");
+    println!(
+        "Try to draw 2 triangles next to each other using glDrawArrays by adding more vertices to your data\n"
     );
 
     println!("Keybinds:");
@@ -26,8 +26,8 @@ fn main() {
 }
 
 fn render_loop(glfw: &mut glfw::Glfw, window: &mut PWindow) {
-    const VERTEX_SHADER_SRC: &str = include_str!("shaders/vertex.glsl");
-    const FRAGMENT_SHADER_SRC: &str = include_str!("shaders/fragment.glsl");
+    const VERTEX_SHADER_SRC: &str = include_str!("../../shaders/vertex.glsl");
+    const FRAGMENT_SHADER_SRC: &str = include_str!("../../shaders/fragment.glsl");
 
     // A shader program is the result of linking multiple compiled shaders
     let shader_program: u32 = match gl_utils::create_program(&[
@@ -43,15 +43,14 @@ fn render_loop(glfw: &mut glfw::Glfw, window: &mut PWindow) {
 
     #[rustfmt::skip]
     let vertices: &[f32] = &[
-         0.5,  0.5, 0., // top right
-         0.5, -0.5, 0., // bottom right
-        -0.5, -0.5, 0., // bottom left
-        -0.5,  0.5, 0., // top left
-    ];
-
-    let indices: &[u32] = &[
-        0, 1, 3, // First triangle
-        1, 2, 3, // Second triangle
+        // First triangle
+        -0.9, -0.5, 0.0, // Bottom left
+         0.0, -0.5, 0.0, // Bottom right
+        -0.45, 0.5, 0.0, // Top
+        // Second triangle
+         0.0, -0.5, 0.0, // Bottom left
+         0.9, -0.5, 0.0, // Bottom right
+         0.45, 0.5, 0.0, // Top
     ];
 
     // Create and bind a vertex buffer object (vertex attribute storage),
@@ -59,11 +58,9 @@ fn render_loop(glfw: &mut glfw::Glfw, window: &mut PWindow) {
     // and a vertex array object (attribute layout)
     let mut vao = 0;
     let mut vbo = 0;
-    let mut ebo = 0;
     unsafe {
         gl::GenVertexArrays(1, &mut vao);
         gl::GenBuffers(1, &mut vbo);
-        gl::GenBuffers(1, &mut ebo);
 
         // VAO must be bound first
         gl::BindVertexArray(vao);
@@ -74,15 +71,6 @@ fn render_loop(glfw: &mut glfw::Glfw, window: &mut PWindow) {
             gl::ARRAY_BUFFER,
             size_of_val(vertices) as isize,
             vertices.as_ptr() as *const c_void,
-            gl::STATIC_DRAW,
-        );
-
-        // Copy the vertex indices into the ebo
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
-        gl::BufferData(
-            gl::ELEMENT_ARRAY_BUFFER,
-            size_of_val(indices) as isize,
-            indices.as_ptr() as *const c_void,
             gl::STATIC_DRAW,
         );
 
@@ -103,7 +91,6 @@ fn render_loop(glfw: &mut glfw::Glfw, window: &mut PWindow) {
         gl::BindVertexArray(0);
         // Unbind the vbo since it was bound to the vertex attribute pointer
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
-        // EBO should not be unbound since it is stored in the VAO
     }
 
     while !window.should_close() {
@@ -122,15 +109,7 @@ fn render_loop(glfw: &mut glfw::Glfw, window: &mut PWindow) {
             gl::BindVertexArray(vao);
 
             // Draw triangles
-            // gl::DrawArrays(gl::TRIANGLES, 0, 3);
-
-            // Draw elements
-            gl::DrawElements(
-                gl::TRIANGLES,
-                vertices.len() as GLsizei,
-                gl::UNSIGNED_INT,
-                null(),
-            );
+            gl::DrawArrays(gl::TRIANGLES, 0, vertices.len() as GLint);
         }
         // Rendering ----------------------------
 

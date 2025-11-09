@@ -3,6 +3,7 @@ use gl::types::GLint;
 use glfw::Context;
 use std::ptr::null_mut;
 
+#[allow(dead_code)]
 pub enum WindowMode {
     Windowed,
     Fullscreen,
