@@ -3,9 +3,12 @@ use std::ptr::null_mut;
 use gl::types::GLint;
 
 /// Creates a shader object, applies the source to the object and compiles the shader checking if
-/// the compilation was succesful
+/// the compilation was succesful.
 ///
-/// Returns the shader object id
+/// Returns the shader object id.
+///
+/// # Errors
+/// If the shader fails to compile, an error string is returned.
 pub fn create_shader(shader_src: &str, shader_type: gl::types::GLenum) -> Result<u32, String> {
     let vertex_shader = unsafe { gl::CreateShader(shader_type) };
 
@@ -47,9 +50,12 @@ pub fn create_shader(shader_src: &str, shader_type: gl::types::GLenum) -> Result
 }
 
 /// Creates a program object, links all the provided shader objects and checks if the linking was
-/// successful
+/// successful.
 ///
-/// Returns the program object id
+/// Returns the program object id.
+///
+/// # Errors
+/// If the program fails to link, an error string is returned.
 pub fn link_program(shaders: &[u32]) -> Result<u32, String> {
     let shader_program: u32 = unsafe { gl::CreateProgram() };
 
@@ -90,4 +96,20 @@ pub fn link_program(shaders: &[u32]) -> Result<u32, String> {
     }
 
     Ok(shader_program)
+}
+
+/// Creates a shader program given a list of shader sources.
+/// 
+/// Returns the program object id.
+///
+/// # Errors
+/// If any of the shaders fail to compile or if the program fails to link, an error string is
+/// returned.
+pub fn create_program(shaders_src: &[(&str, gl::types::GLenum)]) -> Result<u32, String> {
+    let mut compiled = vec![];
+    for &(shader_src, shader_type) in shaders_src {
+        compiled.push(create_shader(shader_src, shader_type)?);
+    }
+
+    link_program(&compiled)
 }

@@ -390,6 +390,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2304e00983f87ffb38b55b444b5e3b60a884b5d30c0fca7d82fe33449bbe55ea"
 
 [[package]]
+name = "hello_triangle"
+version = "0.1.0"
+dependencies = [
+ "gl",
+ "glfw",
+]
+
+[[package]]
 name = "image"
 version = "0.25.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1027,14 +1035,6 @@ dependencies = [
  "serde_spanned",
  "toml_datetime",
  "winnow",
-]
-
-[[package]]
-name = "triangle"
-version = "0.1.0"
-dependencies = [
- "gl",
- "glfw",
 ]
 
 [[package]]

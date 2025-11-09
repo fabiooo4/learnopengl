@@ -57,6 +57,21 @@ fn framebuffer_size_callback(_: &mut Window, new_width: i32, new_height: i32) {
 }
 
 fn render_loop(glfw: &mut glfw::Glfw, window: &mut PWindow) {
+    const VERTEX_SHADER_SRC: &str = include_str!("shaders/vertex.glsl");
+    const FRAGMENT_SHADER_SRC: &str = include_str!("shaders/fragment.glsl");
+
+    // A shader program is the result of linking multiple compiled shaders
+    let shader_program: u32 = match gl_utils::create_program(&[
+        (VERTEX_SHADER_SRC, gl::VERTEX_SHADER),
+        (FRAGMENT_SHADER_SRC, gl::FRAGMENT_SHADER),
+    ]) {
+        Ok(id) => id,
+        Err(log) => {
+            eprintln!("{log}");
+            return;
+        }
+    };
+
     #[rustfmt::skip]
     let vertices: &[f32] = &[
          0.5,  0.5, 0., // top right
@@ -121,36 +136,6 @@ fn render_loop(glfw: &mut glfw::Glfw, window: &mut PWindow) {
         gl::BindBuffer(gl::ARRAY_BUFFER, 0);
         // EBO should not be unbound since it is stored in the VAO
     }
-
-    // Vertex shader
-    const VERTEX_SHADER_SRC: &str = include_str!("shaders/vertex.glsl");
-    let vertex_shader: u32 = match gl_utils::create_shader(VERTEX_SHADER_SRC, gl::VERTEX_SHADER) {
-        Ok(id) => id,
-        Err(log) => {
-            eprintln!("{log}");
-            return;
-        }
-    };
-
-    // Fragment shader
-    const FRAGMENT_SHADER_SRC: &str = include_str!("shaders/fragment.glsl");
-    let fragment_shader: u32 =
-        match gl_utils::create_shader(FRAGMENT_SHADER_SRC, gl::FRAGMENT_SHADER) {
-            Ok(id) => id,
-            Err(log) => {
-                eprintln!("{log}");
-                return;
-            }
-        };
-
-    // Linked program
-    let shader_program: u32 = match gl_utils::link_program(&[vertex_shader, fragment_shader]) {
-        Ok(id) => id,
-        Err(log) => {
-            eprintln!("{log}");
-            return;
-        }
-    };
 
     while !window.should_close() {
         process_input(window);
