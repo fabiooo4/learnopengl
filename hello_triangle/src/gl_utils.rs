@@ -1,6 +1,54 @@
 use core::str;
-use std::ptr::null_mut;
 use gl::types::GLint;
+use glfw::Context;
+use std::ptr::null_mut;
+
+/// Initializes glfw, creates a window and loads OpenGL function pointers.
+/// Returns the glfw instance and the created window.
+///
+/// # Panics
+/// Panics if glfw fails to initialize or if the window creation fails.
+pub fn init_window(
+    width: u32,
+    height: u32,
+    title: &str,
+    window_mode: glfw::WindowMode,
+    window_size_callback: fn(&mut glfw::Window, i32, i32),
+) -> (glfw::Glfw, glfw::PWindow) {
+    // Initialize glfw with OpenGL settings
+    let mut glfw = glfw::init(glfw::fail_on_errors).expect("Failed to initialize glfw");
+    glfw.window_hint(glfw::WindowHint::ContextVersionMajor(3));
+    glfw.window_hint(glfw::WindowHint::ContextVersionMinor(3));
+    glfw.window_hint(glfw::WindowHint::OpenGlProfile(
+        glfw::OpenGlProfileHint::Core,
+    ));
+    glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
+
+    // Create a window
+    let (mut window, _) = glfw
+        .create_window(width, height, title, window_mode)
+        .expect("Failed to create window");
+
+    // Set the window the current OpenGL target
+    window.make_current();
+    // Resize callback
+    window.set_size_callback(window_size_callback);
+
+    // Load OpenGL symbols
+    gl::load_with(|s| {
+        window
+            .get_proc_address(s)
+            .map(|a| a as *const _)
+            .expect("Failed to load OpenGL API")
+    });
+
+    // Set viewport settings
+    unsafe {
+        gl::Viewport(0, 0, width as i32, height as i32);
+    }
+
+    (glfw, window)
+}
 
 /// Creates a shader object, applies the source to the object and compiles the shader checking if
 /// the compilation was succesful.
@@ -99,7 +147,7 @@ pub fn link_program(shaders: &[u32]) -> Result<u32, String> {
 }
 
 /// Creates a shader program given a list of shader sources.
-/// 
+///
 /// Returns the program object id.
 ///
 /// # Errors

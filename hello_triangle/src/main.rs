@@ -1,7 +1,7 @@
 mod gl_utils;
 
-use gl::types::{GLenum, GLint, GLsizei};
-use glfw::{self, Action, Context, Key, PWindow, Window, ffi::glfwWaitEventsTimeout};
+use gl::types::{GLint, GLsizei};
+use glfw::{self, Action, Context, Key, PWindow, Window};
 use std::{ffi::c_void, ptr::null};
 
 const WIDTH: u32 = 800;
@@ -10,41 +10,13 @@ const TITLE: &str = "HELLO TRIANGLE!";
 static mut PREVIOUS_KEY_STATE: Action = Action::Release;
 
 fn main() {
-    init_window();
-}
-
-fn init_window() {
-    // Initialize glfw with OpenGL settings
-    let mut glfw = glfw::init(glfw::fail_on_errors).expect("Failed to initialize glfw");
-    glfw.window_hint(glfw::WindowHint::ContextVersionMajor(3));
-    glfw.window_hint(glfw::WindowHint::ContextVersionMinor(3));
-    glfw.window_hint(glfw::WindowHint::OpenGlProfile(
-        glfw::OpenGlProfileHint::Core,
-    ));
-    glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
-
-    // Create a window
-    let (mut window, _) = glfw
-        .create_window(WIDTH, HEIGHT, TITLE, glfw::WindowMode::Windowed)
-        .expect("Failed to create window");
-
-    // Set the window the current OpenGL target
-    window.make_current();
-    // Resize callback
-    window.set_size_callback(framebuffer_size_callback);
-
-    // Load OpenGL symbols
-    gl::load_with(|s| {
-        window
-            .get_proc_address(s)
-            .map(|a| a as *const _)
-            .expect("Failed to load OpenGL API")
-    });
-
-    // Set viewport settings
-    unsafe {
-        gl::Viewport(0, 0, WIDTH as i32, HEIGHT as i32);
-    }
+    let (mut glfw, mut window) = gl_utils::init_window(
+        WIDTH,
+        HEIGHT,
+        TITLE,
+        glfw::WindowMode::Windowed,
+        framebuffer_size_callback,
+    );
 
     render_loop(&mut glfw, &mut window);
 }
