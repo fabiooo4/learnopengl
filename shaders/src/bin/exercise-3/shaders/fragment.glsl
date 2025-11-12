@@ -3,8 +3,8 @@
 uniform vec4 sum_color;
 
 out vec4 frag_color;
-in vec4 vertex_color;
+in vec4 vertex_position;
 
 void main() {
-  frag_color = vertex_color + sum_color;
+  frag_color = vertex_position;
 }

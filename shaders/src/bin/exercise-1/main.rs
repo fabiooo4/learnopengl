@@ -9,12 +9,17 @@ use std::{ffi::c_void, ptr::null};
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
-const TITLE: &str = "HELLO SHADERS!";
+const TITLE: &str = "Shaders - Exercise 1";
 static mut PREVIOUS_KEY_STATE: Action = Action::Release;
 
 fn main() {
     let (mut glfw, mut window) =
         gl_utils::init_window(WIDTH, HEIGHT, TITLE, gl_utils::WindowMode::Windowed, None);
+
+    println!("Exercise instructions:");
+    println!(
+        "Adjust the vertex shader so that the triangle is upside down"
+    );
 
     println!("Keybinds:");
     println!("  ESCAPE - Close the window");
@@ -26,7 +31,7 @@ fn main() {
 fn render_loop(glfw: &mut glfw::Glfw, window: &mut PWindow) {
     // A shader program is the result of linking multiple compiled shaders
     let shader_program: Shader = Shader::new(&[
-        ("src/shaders/vertex.glsl", ShaderType::VertexShader),
+        ("src/bin/exercise-1/shaders/vertex.glsl", ShaderType::VertexShader),
         ("src/shaders/fragment.glsl", ShaderType::FragmentShader),
     ])
     .unwrap_or_else(|log| panic!("{log}"));

@@ -9,12 +9,20 @@ use std::{ffi::c_void, ptr::null};
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
-const TITLE: &str = "HELLO SHADERS!";
+const TITLE: &str = "Shaders - Exercise 3";
 static mut PREVIOUS_KEY_STATE: Action = Action::Release;
 
 fn main() {
     let (mut glfw, mut window) =
         gl_utils::init_window(WIDTH, HEIGHT, TITLE, gl_utils::WindowMode::Windowed, None);
+
+    println!("Exercise instructions:");
+    println!(
+        "Output the vertex position to the fragment shader using the out keyword and set
+the fragment's color equal to this vertex position (see how even the vertex position
+values are interpolated across the triangle). Once you managed to do this; try to
+answer the following question: why is the bottom-left side of our triangle black?"
+    );
 
     println!("Keybinds:");
     println!("  ESCAPE - Close the window");
@@ -26,8 +34,8 @@ fn main() {
 fn render_loop(glfw: &mut glfw::Glfw, window: &mut PWindow) {
     // A shader program is the result of linking multiple compiled shaders
     let shader_program: Shader = Shader::new(&[
-        ("src/shaders/vertex.glsl", ShaderType::VertexShader),
-        ("src/shaders/fragment.glsl", ShaderType::FragmentShader),
+        ("src/bin/exercise-3/shaders/vertex.glsl", ShaderType::VertexShader),
+        ("src/bin/exercise-3/shaders/fragment.glsl", ShaderType::FragmentShader),
     ])
     .unwrap_or_else(|log| panic!("{log}"));
 
@@ -128,10 +136,10 @@ fn render_loop(glfw: &mut glfw::Glfw, window: &mut PWindow) {
             shader_program.use_program();
 
             let time = glfw.get_time() as f32;
-            let color_value = (f32::sin(time) / 2.) + 0.5;
+            let offset = (f32::sin(time) / 2.);
 
             shader_program
-                .set_uniform_4f("sum_color", color_value, color_value, color_value, 0.)
+                .set_uniform_1f("triangle_offset", offset)
                 .unwrap_or_else(|e| panic!("{}", e));
 
             // Draw elements
