@@ -10,15 +10,24 @@ use std::{ffi::c_void, ptr::null};
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
-const TITLE: &str = "HELLO TEXTURES!";
+const TITLE: &str = "Textures - Exercise 4";
 
 fn main() {
     let (mut glfw, mut window, events) =
         gl_utils::init_window(WIDTH, HEIGHT, TITLE, gl_utils::WindowMode::Windowed, None);
 
+    println!("Exercise instructions:");
+    println!(
+        "Use a uniform variable as the mix function's third parameter to vary the amount
+the two textures are visible. Use the up and down arrow keys to change how much the
+container or the smiley face is visible"
+    );
+
     println!("Keybinds:");
-    println!("  ESCAPE - Close the window");
-    println!("  P      - Toggle between fill and wireframe mode");
+    println!("  ESCAPE    - Close the window");
+    println!("  P         - Toggle between fill and wireframe mode");
+    println!("  UpArrow   - Increase foreground opacity");
+    println!("  DownArrow - Decrease foreground opacity");
 
     render_loop(&mut glfw, &mut window, &events);
 }
@@ -31,7 +40,10 @@ fn render_loop(
     // A shader program is the result of linking multiple compiled shaders
     let shader_program: Shader = Shader::new(&[
         ("src/shaders/vertex.glsl", ShaderType::VertexShader),
-        ("src/shaders/fragment.glsl", ShaderType::FragmentShader),
+        (
+            "src/bin/exercise-4/shaders/fragment.glsl",
+            ShaderType::FragmentShader,
+        ),
     ])
     .unwrap_or_else(|log| panic!("{log}"));
 
@@ -243,9 +255,9 @@ fn render_loop(
         .set_uniform_1i("foreground_texture", 1)
         .unwrap_or_else(|e| panic!("{e}"));
 
+    let mut state: f32 = 0.;
     while !window.should_close() {
-        process_input(window, events);
-
+        process_input(window, events, &mut state);
         // Rendering ----------------------------
         unsafe {
             // Clear the color buffer with a specified color
@@ -262,6 +274,11 @@ fn render_loop(
             // Draw elements
             // Set shader program to use
             shader_program.use_program();
+
+            shader_program
+                .set_uniform_1f("mix_value", state)
+                .unwrap_or_else(|e| panic!("{e}"));
+
             // Allows to change data layout for different objects
             gl::BindVertexArray(vao);
             gl::DrawElements(
@@ -284,7 +301,11 @@ fn render_loop(
     }
 }
 
-fn process_input(window: &mut PWindow, events: &glfw::GlfwReceiver<(f64, glfw::WindowEvent)>) {
+fn process_input(
+    window: &mut PWindow,
+    events: &glfw::GlfwReceiver<(f64, glfw::WindowEvent)>,
+    state: &mut f32,
+) {
     for (_, event) in glfw::flush_messages(events) {
         match event {
             glfw::WindowEvent::Key(Key::Escape, _, Action::Press, _) => {
@@ -301,6 +322,14 @@ fn process_input(window: &mut PWindow, events: &glfw::GlfwReceiver<(f64, glfw::W
                         gl::PolygonMode(gl::FRONT_AND_BACK, gl::LINE);
                     }
                 }
+            }
+
+            glfw::WindowEvent::Key(Key::Up, _, Action::Press | Action::Repeat, _) => {
+                *state = f32::clamp(*state + 0.05, 0., 1.);
+            }
+
+            glfw::WindowEvent::Key(Key::Down, _, Action::Press | Action::Repeat, _) => {
+                *state = f32::clamp(*state - 0.05, 0., 1.);
             }
             _ => {}
         }

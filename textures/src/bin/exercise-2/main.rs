@@ -10,11 +10,18 @@ use std::{ffi::c_void, ptr::null};
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
-const TITLE: &str = "HELLO TEXTURES!";
+const TITLE: &str = "Textures - Exercise 2";
 
 fn main() {
     let (mut glfw, mut window, events) =
         gl_utils::init_window(WIDTH, HEIGHT, TITLE, gl_utils::WindowMode::Windowed, None);
+
+    println!("Exercise instructions:");
+    println!(
+        "Experiment with the different texture wrapping methods by specifying texture
+coordinates in the range 0.0f to 2.0f instead of 0.0f to 1.0f. See if you can display
+4 smiley faces on a single container image clamped at its edge"
+    );
 
     println!("Keybinds:");
     println!("  ESCAPE - Close the window");
@@ -38,10 +45,10 @@ fn render_loop(
     #[rustfmt::skip]
     let vertices: &[f32] = &[
         // Positions       // Colors        // Texture coords
-         0.5,  0.5, 0.0,   1.0, 0.0, 0.0,   1.0, 1.0,   // Top right
-         0.5, -0.5, 0.0,   0.0, 1.0, 0.0,   1.0, 0.0,   // Bottom right
+         0.5,  0.5, 0.0,   1.0, 0.0, 0.0,   2.0, 2.0,   // Top right
+         0.5, -0.5, 0.0,   0.0, 1.0, 0.0,   2.0, 0.0,   // Bottom right
         -0.5, -0.5, 0.0,   0.0, 0.0, 1.0,   0.0, 0.0,   // Bottom left
-        -0.5,  0.5, 0.0,   1.0, 1.0, 0.0,   0.0, 1.0    // Top left 
+        -0.5,  0.5, 0.0,   1.0, 1.0, 0.0,   0.0, 2.0    // Top left 
     ];
 
     let indices: &[u32] = &[
@@ -137,16 +144,8 @@ fn render_loop(
         gl::BindTexture(gl::TEXTURE_2D, background_texture);
 
         // Setup wrapping for s and t coordinates
-        gl::TexParameteri(
-            gl::TEXTURE_2D,
-            gl::TEXTURE_WRAP_S,
-            gl::MIRRORED_REPEAT as i32,
-        );
-        gl::TexParameteri(
-            gl::TEXTURE_2D,
-            gl::TEXTURE_WRAP_S,
-            gl::MIRRORED_REPEAT as i32,
-        );
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::CLAMP_TO_EDGE as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::CLAMP_TO_EDGE as i32);
 
         // Set texture filtering for both magnified textures and minified textures
         gl::TexParameteri(
@@ -188,16 +187,8 @@ fn render_loop(
         gl::BindTexture(gl::TEXTURE_2D, foreground_texture);
 
         // Setup wrapping for s and t coordinates
-        gl::TexParameteri(
-            gl::TEXTURE_2D,
-            gl::TEXTURE_WRAP_S,
-            gl::MIRRORED_REPEAT as i32,
-        );
-        gl::TexParameteri(
-            gl::TEXTURE_2D,
-            gl::TEXTURE_WRAP_S,
-            gl::MIRRORED_REPEAT as i32,
-        );
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_S, gl::REPEAT as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_WRAP_T, gl::REPEAT as i32);
 
         // Set texture filtering for both magnified textures and minified textures
         gl::TexParameteri(

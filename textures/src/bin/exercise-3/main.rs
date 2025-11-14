@@ -10,11 +10,19 @@ use std::{ffi::c_void, ptr::null};
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
-const TITLE: &str = "HELLO TEXTURES!";
+const TITLE: &str = "Textures - Exercise 3";
 
 fn main() {
     let (mut glfw, mut window, events) =
         gl_utils::init_window(WIDTH, HEIGHT, TITLE, gl_utils::WindowMode::Windowed, None);
+
+    println!("Exercise instructions:");
+    println!(
+        "Try to display only the center pixels of the texture image on the rectangle
+in such a way that the individual pixels are getting visible by changing the texture
+coordinates. Try to set the texture filtering method to GL_NEAREST to see the pixels
+more clearly"
+    );
 
     println!("Keybinds:");
     println!("  ESCAPE - Close the window");
@@ -38,10 +46,10 @@ fn render_loop(
     #[rustfmt::skip]
     let vertices: &[f32] = &[
         // Positions       // Colors        // Texture coords
-         0.5,  0.5, 0.0,   1.0, 0.0, 0.0,   1.0, 1.0,   // Top right
-         0.5, -0.5, 0.0,   0.0, 1.0, 0.0,   1.0, 0.0,   // Bottom right
-        -0.5, -0.5, 0.0,   0.0, 0.0, 1.0,   0.0, 0.0,   // Bottom left
-        -0.5,  0.5, 0.0,   1.0, 1.0, 0.0,   0.0, 1.0    // Top left 
+         0.5,  0.5, 0.0,   1.0, 0.0, 0.0,   0.50, 0.50,   // Top right
+         0.5, -0.5, 0.0,   0.0, 1.0, 0.0,   0.50, 0.48,   // Bottom right
+        -0.5, -0.5, 0.0,   0.0, 0.0, 1.0,   0.48, 0.48,   // Bottom left
+        -0.5,  0.5, 0.0,   1.0, 1.0, 0.0,   0.48, 0.50    // Top left 
     ];
 
     let indices: &[u32] = &[
@@ -149,12 +157,8 @@ fn render_loop(
         );
 
         // Set texture filtering for both magnified textures and minified textures
-        gl::TexParameteri(
-            gl::TEXTURE_2D,
-            gl::TEXTURE_MIN_FILTER,
-            gl::LINEAR_MIPMAP_LINEAR as i32,
-        );
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
 
         // Load the image data into the texture object
         let background_img = ImageReader::open("src/assets/background.jpg")
@@ -200,12 +204,8 @@ fn render_loop(
         );
 
         // Set texture filtering for both magnified textures and minified textures
-        gl::TexParameteri(
-            gl::TEXTURE_2D,
-            gl::TEXTURE_MIN_FILTER,
-            gl::LINEAR_MIPMAP_LINEAR as i32,
-        );
-        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::LINEAR as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MIN_FILTER, gl::NEAREST as i32);
+        gl::TexParameteri(gl::TEXTURE_2D, gl::TEXTURE_MAG_FILTER, gl::NEAREST as i32);
 
         // Load the image data into the texture object
         let foreground_img = ImageReader::open("src/assets/foreground.png")

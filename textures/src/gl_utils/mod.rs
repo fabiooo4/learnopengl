@@ -12,7 +12,7 @@ pub enum WindowMode {
 /// Initializes glfw, creates a window and loads OpenGL function pointers. The default window size
 /// callback, which updates the OpenGL viewport on window resize, is used if no custom callback is
 /// provided.
-/// Returns the glfw instance and the created window.
+/// Returns the glfw instance, the created window and the event reciever
 ///
 /// # Panics
 /// Panics if glfw fails to initialize or if the window creation fails.
@@ -22,7 +22,7 @@ pub fn init_window(
     title: &str,
     window_mode: WindowMode,
     window_size_callback: Option<fn(&mut glfw::Window, i32, i32)>,
-) -> (glfw::Glfw, glfw::PWindow) {
+) -> (glfw::Glfw, glfw::PWindow, glfw::GlfwReceiver<(f64, glfw::WindowEvent)>) {
     // Initialize glfw with OpenGL settings
     let mut glfw = glfw::init(glfw::fail_on_errors).expect("Failed to initialize glfw");
     glfw.window_hint(glfw::WindowHint::ContextVersionMajor(3));
@@ -33,7 +33,7 @@ pub fn init_window(
     glfw.window_hint(glfw::WindowHint::OpenGlForwardCompat(true));
 
     // Create a window
-    let (mut window, _) = match window_mode {
+    let (mut window, event) = match window_mode {
         WindowMode::Windowed => {
             if width == 0 || height == 0 {
                 panic!("Window dimensions must be greater than zero in windowed mode");
@@ -56,6 +56,8 @@ pub fn init_window(
             .expect("Failed to create window")
         }),
     };
+
+    window.set_key_polling(true);
 
     // Set the window the current OpenGL target
     window.make_current();
@@ -81,7 +83,7 @@ pub fn init_window(
         gl::Viewport(0, 0, screen_width, screen_height);
     }
 
-    (glfw, window)
+    (glfw, window, event)
 }
 
 /// Default framebuffer size callback that updates the OpenGL viewport when the window is resized.
