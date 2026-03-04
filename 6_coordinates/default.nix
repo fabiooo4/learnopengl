@@ -6,7 +6,7 @@
   wayland,
 }:
 rustPlatform.buildRustPackage {
-  name = "transformations";
+  name = "coordinates";
   src = ./.;
   buildInputs = [
     glfw3

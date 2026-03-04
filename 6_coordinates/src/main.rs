@@ -1,19 +1,19 @@
 extern crate nalgebra_glm as glm;
 
-use glm::{Mat4, identity, vec3};
-use image::{EncodableLayout, ImageReader};
-use transformations::gl_utils::{
+use coordinates::gl_utils::{
     self,
     shader::{Shader, ShaderType},
 };
+use glm::{Mat4, Vec3, vec3};
+use image::{EncodableLayout, ImageReader};
 
 use gl::types::{GLint, GLsizei};
-use glfw::{self, Action, Context, Key, PWindow, ffi::glfwGetTime};
+use glfw::{self, Action, Context, Key, PWindow};
 use std::{ffi::c_void, ptr::null};
 
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
-const TITLE: &str = "HELLO TRANSFORMATIONS!";
+const TITLE: &str = "HELLO COORDINATES!";
 
 fn main() {
     let (mut glfw, mut window, events) =
@@ -40,16 +40,67 @@ fn render_loop(
 
     #[rustfmt::skip]
     let vertices: &[f32] = &[
-        // Positions       // Colors        // Texture coords
-         0.5,  0.5, 0.0,   1.0, 0.0, 0.0,   1.0, 1.0,   // Top right
-         0.5, -0.5, 0.0,   0.0, 1.0, 0.0,   1.0, 0.0,   // Bottom right
-        -0.5, -0.5, 0.0,   0.0, 0.0, 1.0,   0.0, 0.0,   // Bottom left
-        -0.5,  0.5, 0.0,   1.0, 1.0, 0.0,   0.0, 1.0    // Top left 
+        // Positions       // Texture coords
+        -0.5, -0.5, -0.5,  0.0, 0.0,
+         0.5, -0.5, -0.5,  1.0, 0.0,
+         0.5,  0.5, -0.5,  1.0, 1.0,
+         0.5,  0.5, -0.5,  1.0, 1.0,
+        -0.5,  0.5, -0.5,  0.0, 1.0,
+        -0.5, -0.5, -0.5,  0.0, 0.0,
+
+        -0.5, -0.5,  0.5,  0.0, 0.0,
+         0.5, -0.5,  0.5,  1.0, 0.0,
+         0.5,  0.5,  0.5,  1.0, 1.0,
+         0.5,  0.5,  0.5,  1.0, 1.0,
+        -0.5,  0.5,  0.5,  0.0, 1.0,
+        -0.5, -0.5,  0.5,  0.0, 0.0,
+
+        -0.5,  0.5,  0.5,  1.0, 0.0,
+        -0.5,  0.5, -0.5,  1.0, 1.0,
+        -0.5, -0.5, -0.5,  0.0, 1.0,
+        -0.5, -0.5, -0.5,  0.0, 1.0,
+        -0.5, -0.5,  0.5,  0.0, 0.0,
+        -0.5,  0.5,  0.5,  1.0, 0.0,
+
+         0.5,  0.5,  0.5,  1.0, 0.0,
+         0.5,  0.5, -0.5,  1.0, 1.0,
+         0.5, -0.5, -0.5,  0.0, 1.0,
+         0.5, -0.5, -0.5,  0.0, 1.0,
+         0.5, -0.5,  0.5,  0.0, 0.0,
+         0.5,  0.5,  0.5,  1.0, 0.0,
+
+        -0.5, -0.5, -0.5,  0.0, 1.0,
+         0.5, -0.5, -0.5,  1.0, 1.0,
+         0.5, -0.5,  0.5,  1.0, 0.0,
+         0.5, -0.5,  0.5,  1.0, 0.0,
+        -0.5, -0.5,  0.5,  0.0, 0.0,
+        -0.5, -0.5, -0.5,  0.0, 1.0,
+
+        -0.5,  0.5, -0.5,  0.0, 1.0,
+         0.5,  0.5, -0.5,  1.0, 1.0,
+         0.5,  0.5,  0.5,  1.0, 0.0,
+         0.5,  0.5,  0.5,  1.0, 0.0,
+        -0.5,  0.5,  0.5,  0.0, 0.0,
+        -0.5,  0.5, -0.5,  0.0, 1.0
     ];
 
-    let indices: &[u32] = &[
-        0, 1, 3, // First triangle
-        1, 2, 3, // Second triangle
+    // let indices: &[u32] = &[
+    //     0, 1, 3, // First triangle
+    //     1, 2, 3, // Second triangle
+    // ];
+
+    #[rustfmt::skip]
+    let cube_positions: &[Vec3] = &[
+        vec3( 0.0,  0.0,  0.0 ),
+        vec3( 2.0,  5.0, -15.0),
+        vec3(-1.5, -2.2, -2.5 ),
+        vec3(-3.8, -2.0, -12.3),
+        vec3( 2.4, -0.4, -3.5 ),
+        vec3(-1.7,  3.0, -7.5 ),
+        vec3( 1.3, -2.0, -2.5 ),
+        vec3( 1.5,  2.0, -2.5 ),
+        vec3( 1.5,  0.2, -1.5 ),
+        vec3(-1.3,  1.0, -1.5 ),
     ];
 
     // Create and bind a vertex buffer object (vertex attribute storage),
@@ -57,11 +108,11 @@ fn render_loop(
     // and a vertex array object (attribute layout)
     let mut vao = 0;
     let mut vbo = 0;
-    let mut ebo = 0;
+    // let mut ebo = 0;
     unsafe {
         gl::GenVertexArrays(1, &mut vao);
         gl::GenBuffers(1, &mut vbo);
-        gl::GenBuffers(1, &mut ebo);
+        // gl::GenBuffers(1, &mut ebo);
 
         // VAO must be bound first
         gl::BindVertexArray(vao);
@@ -76,48 +127,48 @@ fn render_loop(
         );
 
         // Copy the vertex indices into the ebo
-        gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
-        gl::BufferData(
-            gl::ELEMENT_ARRAY_BUFFER,
-            size_of_val(indices) as isize,
-            indices.as_ptr() as *const c_void,
-            gl::STATIC_DRAW,
-        );
+        // gl::BindBuffer(gl::ELEMENT_ARRAY_BUFFER, ebo);
+        // gl::BufferData(
+        //     gl::ELEMENT_ARRAY_BUFFER,
+        //     size_of_val(indices) as isize,
+        //     indices.as_ptr() as *const c_void,
+        //     gl::STATIC_DRAW,
+        // );
 
         // Position attributes ----------------------------
         gl::VertexAttribPointer(
-            0,                                         // Location = 0 in vertex shader
-            3,                                         // Size of data (3 floats = vec3)
-            gl::FLOAT,                                 // Data type
-            gl::FALSE,                                 // Normalization
-            (3 + 3 + 2) * size_of::<f32>() as GLsizei, // Space between 2 consecutive attributes
-            null(),                                    // Offset
+            0,                                               // Location = 0 in vertex shader
+            3,                                               // Size of data (3 floats = vec3)
+            gl::FLOAT,                                       // Data type
+            gl::FALSE,                                       // Normalization
+            (3 /* + 3 */ + 2) * size_of::<f32>() as GLsizei, // Space between 2 consecutive attributes
+            null(),                                          // Offset
         );
 
         gl::EnableVertexAttribArray(0);
         // Position attributes ----------------------------
 
-        // Color attributes -------------------------------
-        gl::VertexAttribPointer(
-            1,                                         // Location = 1 in vertex shader
-            3,                                         // Size of data (3 floats = vec3)
-            gl::FLOAT,                                 // Data type
-            gl::FALSE,                                 // Normalization
-            (3 + 3 + 2) * size_of::<f32>() as GLsizei, // Space between 2 consecutive attributes
-            (3 * size_of::<f32>()) as *const c_void,   // Offset (after position)
-        );
-
-        gl::EnableVertexAttribArray(1);
-        // Color attributes -------------------------------
+        // // Color attributes -------------------------------
+        // gl::VertexAttribPointer(
+        //     1,                                         // Location = 1 in vertex shader
+        //     3,                                         // Size of data (3 floats = vec3)
+        //     gl::FLOAT,                                 // Data type
+        //     gl::FALSE,                                 // Normalization
+        //     (3 + 3 + 2) * size_of::<f32>() as GLsizei, // Space between 2 consecutive attributes
+        //     (3 * size_of::<f32>()) as *const c_void,   // Offset (after position)
+        // );
+        //
+        // gl::EnableVertexAttribArray(1);
+        // // Color attributes -------------------------------
 
         // Texture coords attributes ----------------------
         gl::VertexAttribPointer(
-            2,                                         // Location = 1 in vertex shader
-            2,                                         // Size of data (3 floats = vec3)
-            gl::FLOAT,                                 // Data type
-            gl::FALSE,                                 // Normalization
-            (3 + 3 + 2) * size_of::<f32>() as GLsizei, // Space between 2 consecutive attributes
-            (6 * size_of::<f32>()) as *const c_void,   // Offset (after color)
+            2,                                               // Location = 1 in vertex shader
+            2,                                               // Size of data (2 floats = vec2)
+            gl::FLOAT,                                       // Data type
+            gl::FALSE,                                       // Normalization
+            (3 /* + 3 */ + 2) * size_of::<f32>() as GLsizei, // Space between 2 consecutive attributes
+            (3 * size_of::<f32>()) as *const c_void,         // Offset (after position)
         );
 
         gl::EnableVertexAttribArray(2);
@@ -235,6 +286,9 @@ fn render_loop(
         );
         // Automatically generate the mipmap
         gl::GenerateMipmap(gl::TEXTURE_2D);
+
+        // Enable depth test
+        gl::Enable(gl::DEPTH_TEST);
     };
 
     // Set the texture unit for each texture in the shader
@@ -252,8 +306,8 @@ fn render_loop(
         // Rendering ----------------------------
         unsafe {
             // Clear the color buffer with a specified color
-            gl::ClearColor(0., 0., 0., 1.);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::ClearColor(0.2, 0.2, 0.2, 1.);
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             // Pass the texture data to the shaders
             gl::ActiveTexture(gl::TEXTURE0);
@@ -266,23 +320,53 @@ fn render_loop(
             // Set shader program to use
             shader_program.use_program();
 
-            // Create a transform matrix
-            let mut transform: Mat4 = identity();
-            transform = glm::rotate(&transform, f32::to_radians(glfwGetTime() as f32 * 100.), &glm::vec3(0., 0., 1.));
-            transform = glm::scale(&transform, &vec3(0.5, 0.5, 0.5));
+            // World coords -> View coords
+            let mut view_mat: Mat4 = glm::identity();
+            view_mat = glm::translate(&view_mat, &vec3(0., 0., -3.));
 
             shader_program
-                .set_uniform_mat_4fv("transform", transform)
+                .set_uniform_mat_4fv("view", view_mat)
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            // View coords -> Clip coords
+            let proj_mat: Mat4 = glm::perspective(
+                WIDTH as f32 / HEIGHT as f32,
+                f32::to_radians(45.),
+                0.1,
+                100.,
+            );
+
+            shader_program
+                .set_uniform_mat_4fv("projection", proj_mat)
                 .unwrap_or_else(|e| panic!("{e}"));
 
             // Allows to change data layout for different objects
             gl::BindVertexArray(vao);
-            gl::DrawElements(
-                gl::TRIANGLES,
-                vertices.len() as GLsizei,
-                gl::UNSIGNED_INT,
-                null(),
-            );
+            // gl::DrawElements(
+            //     gl::TRIANGLES,
+            //     vertices.len() as GLsizei,
+            //     gl::UNSIGNED_INT,
+            //     null(),
+            // );
+
+            // Use DrawArrays since there are no indices for the cube vertices
+            for (i, pos) in cube_positions.iter().enumerate() {
+                // Vertex coords -> World coords
+                let mut model_mat: Mat4 = glm::identity();
+
+                // Translate each cube by the pos vector and then rotate it
+                model_mat = glm::translate(&model_mat, pos);
+
+                let angle = 20. * i as f32;
+                model_mat = glm::rotate(&model_mat, f32::to_radians(angle), &vec3(1., 0.3, 0.5));
+
+                // Assign the new model matrix and render
+                shader_program
+                    .set_uniform_mat_4fv("model", model_mat)
+                    .unwrap_or_else(|e| panic!("{e}"));
+
+                gl::DrawArrays(gl::TRIANGLES, 0, vertices.len() as i32 / 5);
+            }
         }
         // Rendering ----------------------------
 
@@ -294,7 +378,7 @@ fn render_loop(
     unsafe {
         gl::DeleteVertexArrays(1, &vao);
         gl::DeleteBuffers(1, &vbo);
-        gl::DeleteBuffers(1, &ebo);
+        // gl::DeleteBuffers(1, &ebo);
     }
 }
 
