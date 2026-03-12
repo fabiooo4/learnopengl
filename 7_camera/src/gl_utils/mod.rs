@@ -1,4 +1,5 @@
 pub mod shader;
+pub mod model;
 pub mod camera;
 
 use core::str;
