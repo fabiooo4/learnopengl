@@ -40,10 +40,12 @@ fn main() {
     println!("----------------------- KEYBINDS ------------------------");
     println!("          ESCAPE - Close the window");
     println!("               P - Toggle between fill and wireframe mode");
-    println!("      W, A, S, D - Move the camera");
+    println!("      W, A, S, D - Move around");
+    println!("           SPACE - Fly up");
+    println!("        LeftCtrl - Fly down");
+    println!("      Left Shift - Sprint");
     println!("  Mouse movement - Look around");
     println!("          Scroll - Zoom in/out");
-    println!("      Left Shift - Sprint");
 
     render_loop(&mut glfw, &mut window, &events);
 }
@@ -157,6 +159,13 @@ fn process_input(
         let camera_right = glm::normalize(&glm::cross(&camera.front, &camera.up));
 
         camera.pos += camera_right * velocity;
+    }
+
+    if window.get_key(Key::Space) == Action::Press {
+        camera.pos += camera.up * velocity;
+    }
+    if window.get_key(Key::LeftControl) == Action::Press {
+        camera.pos -= camera.up * velocity;
     }
 
     // Discrete events
