@@ -3,7 +3,7 @@ extern crate nalgebra_glm as glm;
 use colors::gl_utils::{
     self,
     camera::Camera,
-    model::{Cube, Model},
+    model::{Color, Cube, Model},
     shader::{Shader, ShaderType},
 };
 use glm::{Mat4, TVec2, Vec3, vec2, vec3};
@@ -61,7 +61,7 @@ fn render_loop(
     let mut delta_time;
     let mut camera = Camera::default();
     let mut mouse = MouseState::default();
-    let cube = Cube::new();
+    let cube = Cube::new(Color::from_hex(0xED5700));
 
     // A shader program is the result of linking multiple compiled shaders
     let shader_program: Shader = Shader::new(&[
@@ -69,20 +69,6 @@ fn render_loop(
         ("src/shaders/fragment.glsl", ShaderType::FragmentShader),
     ])
     .unwrap_or_else(|log| panic!("{log}"));
-
-    #[rustfmt::skip]
-    let cube_positions: &[Vec3] = &[
-        vec3( 0.0,  0.0,  0.0 ),
-        vec3( 2.0,  5.0, -15.0),
-        vec3(-1.5, -2.2, -2.5 ),
-        vec3(-3.8, -2.0, -12.3),
-        vec3( 2.4, -0.4, -3.5 ),
-        vec3(-1.7,  3.0, -7.5 ),
-        vec3( 1.3, -2.0, -2.5 ),
-        vec3( 1.5,  2.0, -2.5 ),
-        vec3( 1.5,  0.2, -1.5 ),
-        vec3(-1.3,  1.0, -1.5 ),
-    ];
 
     let mut last_frame = 0.;
     while !window.should_close() {
@@ -102,6 +88,12 @@ fn render_loop(
             // Draw elements
             // Set shader program to use
             shader_program.use_program();
+
+            // Vertex coords -> World coords
+            let model_mat: Mat4 = glm::identity();
+            shader_program
+                .set_uniform_mat_4fv("model", model_mat)
+                .unwrap_or_else(|e| panic!("{e}"));
 
             // World coords -> View coords
             // Camera
@@ -123,23 +115,7 @@ fn render_loop(
                 .set_uniform_mat_4fv("projection", proj_mat)
                 .unwrap_or_else(|e| panic!("{e}"));
 
-            for (i, pos) in cube_positions.iter().enumerate() {
-                // Vertex coords -> World coords
-                let mut model_mat: Mat4 = glm::identity();
-
-                // Translate each cube by the pos vector and then rotate it
-                model_mat = glm::translate(&model_mat, pos);
-
-                let angle = 20. * i as f32;
-                model_mat = glm::rotate(&model_mat, f32::to_radians(angle), &vec3(1., 0.3, 0.5));
-
-                // Assign the new model matrix and render
-                shader_program
-                    .set_uniform_mat_4fv("model", model_mat)
-                    .unwrap_or_else(|e| panic!("{e}"));
-
-                cube.draw();
-            }
+            cube.draw();
         }
         // Rendering ----------------------------
 
