@@ -3,7 +3,7 @@ extern crate nalgebra_glm as glm;
 use colors::gl_utils::{
     self,
     camera::Camera,
-    model::{Color, Cube, Model},
+    model::{Color, Cube, Model, Normalize},
     shader::{Shader, ShaderType},
 };
 use glm::{Mat4, TVec2, Vec3, vec2, vec3};
@@ -84,7 +84,13 @@ fn render_loop(
         // Rendering ----------------------------
         unsafe {
             // Clear the color buffer with a specified color
-            gl::ClearColor(0.2, 0.2, 0.2, 1.);
+            let bg_color = Color::from_hex(0x191919);
+            gl::ClearColor(
+                bg_color.red().normalize(),
+                bg_color.green().normalize(),
+                bg_color.blue().normalize(),
+                bg_color.alpha().normalize(),
+            );
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             // Draw elements

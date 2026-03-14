@@ -18,10 +18,7 @@ pub struct Vertex {
 
 impl Vertex {
     pub fn new(position: Vec3, color: Vec3) -> Self {
-        Vertex {
-            position,
-            color: color.into(),
-        }
+        Vertex { position, color }
     }
 }
 
@@ -77,10 +74,20 @@ impl Color {
 impl From<Color> for Vec3 {
     fn from(val: Color) -> Self {
         vec3(
-            val.red() as f32 / 255.,
-            val.green() as f32 / 255.,
-            val.blue() as f32 / 255.,
+            val.red().normalize(),
+            val.green().normalize(),
+            val.blue().normalize(),
         )
+    }
+}
+
+pub trait Normalize {
+    fn normalize(self) -> f32;
+}
+
+impl Normalize for u8 {
+    fn normalize(self) -> f32 {
+        self as f32 / u8::MAX as f32
     }
 }
 
