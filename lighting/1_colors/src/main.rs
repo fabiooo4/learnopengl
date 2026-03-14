@@ -65,10 +65,24 @@ fn render_loop(
     let mut mouse = MouseState::default();
     let cube = Cube::new(Color::from_hex(0xED5700));
 
+    let light_color = Color::from_hex(0xFFFFFF);
+    let light_position: Vec3 = vec3(1.2, 1., 2.);
+    let light_scale: Vec3 = vec3(0.2, 0.2, 0.2);
+    let light = Cube::new(light_color);
+
     // A shader program is the result of linking multiple compiled shaders
-    let shader_program: Shader = Shader::new(&[
+    let scene_shader: Shader = Shader::new(&[
         ("src/shaders/vertex.glsl", ShaderType::VertexShader),
         ("src/shaders/fragment.glsl", ShaderType::FragmentShader),
+    ])
+    .unwrap_or_else(|log| panic!("{log}"));
+
+    let emitter_shader: Shader = Shader::new(&[
+        ("src/shaders/vertex.glsl", ShaderType::VertexShader),
+        (
+            "src/shaders/emitter_fragment.glsl",
+            ShaderType::FragmentShader,
+        ),
     ])
     .unwrap_or_else(|log| panic!("{log}"));
 
@@ -95,21 +109,23 @@ fn render_loop(
 
             // Draw elements
             // Set shader program to use
-            shader_program.use_program();
+            scene_shader.use_program();
+
+            scene_shader
+                .set_uniform_3f(
+                    "light_color",
+                    light_color.red().normalize(),
+                    light_color.green().normalize(),
+                    light_color.blue().normalize(),
+                )
+                .unwrap_or_else(|e| panic!("{e}"));
 
             // Vertex coords -> World coords
-            let model_mat: Mat4 = glm::identity();
-            shader_program
-                .set_uniform_mat_4fv("model", model_mat)
-                .unwrap_or_else(|e| panic!("{e}"));
+            let mut model_mat: Mat4 = glm::identity();
 
             // World coords -> View coords
             // Camera
             let view_mat = glm::look_at(&camera.pos, &(camera.pos + camera.front), &camera.up);
-
-            shader_program
-                .set_uniform_mat_4fv("view", view_mat)
-                .unwrap_or_else(|e| panic!("{e}"));
 
             // View coords -> Clip coords
             let proj_mat: Mat4 = glm::perspective(
@@ -119,11 +135,48 @@ fn render_loop(
                 100.,
             );
 
-            shader_program
+            scene_shader
+                .set_uniform_mat_4fv("model", model_mat)
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            scene_shader
+                .set_uniform_mat_4fv("view", view_mat)
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            scene_shader
                 .set_uniform_mat_4fv("projection", proj_mat)
                 .unwrap_or_else(|e| panic!("{e}"));
 
             cube.draw();
+
+            // Set light color
+            emitter_shader.use_program();
+
+            emitter_shader
+                .set_uniform_3f(
+                    "light_color",
+                    light_color.red().normalize(),
+                    light_color.green().normalize(),
+                    light_color.blue().normalize(),
+                )
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            // Translate the light
+            model_mat = glm::translate(&model_mat, &light_position);
+            model_mat = glm::scale(&model_mat, &light_scale);
+            emitter_shader
+                .set_uniform_mat_4fv("model", model_mat)
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            emitter_shader
+                .set_uniform_mat_4fv("view", view_mat)
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            emitter_shader
+                .set_uniform_mat_4fv("projection", proj_mat)
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            light.draw();
         }
         // Rendering ----------------------------
 

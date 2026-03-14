@@ -91,6 +91,7 @@ impl Normalize for u8 {
     }
 }
 
+#[derive(Clone)]
 pub struct Cube {
     vao: u32,
     vbo: u32,
@@ -194,7 +195,7 @@ impl Cube {
 
 impl Default for Cube {
     fn default() -> Self {
-        let color = Color::from_hex(0x808080);
+        let color = Color::from_hex(0xffffff);
 
         let vertices = Cube::vertices(color);
 

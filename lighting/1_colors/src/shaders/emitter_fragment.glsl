@@ -3,8 +3,7 @@
 uniform vec3 light_color;
 
 out vec4 frag_color;
-in vec3 vertex_color;
 
 void main() {
-  frag_color = vec4(light_color * vertex_color, 1.0);
+  frag_color = vec4(light_color, 1.0);
 }
