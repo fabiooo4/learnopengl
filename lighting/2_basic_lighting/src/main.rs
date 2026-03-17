@@ -3,7 +3,7 @@ extern crate nalgebra_glm as glm;
 use basic_lighting::gl_utils::{
     self,
     camera::Camera,
-    model::{Cube, Model},
+    model::{Color, Cube, Model, Normalize},
     shader::{Shader, ShaderType},
 };
 use glm::{Mat4, TVec2, Vec3, vec2, vec3};
@@ -14,7 +14,7 @@ use glfw::{self, Action, Context, Key, PWindow, ffi::glfwGetTime};
 // Window
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
-const TITLE: &str = "HELLO COLORS!";
+const TITLE: &str = "HELLO BASIC LIGHTING!";
 
 // Mouse
 const SENSITIVITY: f64 = 0.1;
@@ -40,10 +40,12 @@ fn main() {
     println!("----------------------- KEYBINDS ------------------------");
     println!("          ESCAPE - Close the window");
     println!("               P - Toggle between fill and wireframe mode");
-    println!("      W, A, S, D - Move the camera");
+    println!("      W, A, S, D - Move around");
+    println!("           SPACE - Fly up");
+    println!("        LeftCtrl - Fly down");
+    println!("      Left Shift - Sprint");
     println!("  Mouse movement - Look around");
     println!("          Scroll - Zoom in/out");
-    println!("      Left Shift - Sprint");
 
     render_loop(&mut glfw, &mut window, &events);
 }
@@ -61,28 +63,28 @@ fn render_loop(
     let mut delta_time;
     let mut camera = Camera::default();
     let mut mouse = MouseState::default();
-    let cube = Cube::new();
+    let cube = Cube::new(Color::from_hex(0xED5700));
+
+    let light_color = Color::from_hex(0xFFFFFF);
+    let light_position: Vec3 = vec3(1.2, 1., 2.);
+    let light_scale: Vec3 = vec3(0.2, 0.2, 0.2);
+    let light = Cube::new(light_color);
 
     // A shader program is the result of linking multiple compiled shaders
-    let shader_program: Shader = Shader::new(&[
+    let scene_shader: Shader = Shader::new(&[
         ("src/shaders/vertex.glsl", ShaderType::VertexShader),
         ("src/shaders/fragment.glsl", ShaderType::FragmentShader),
     ])
     .unwrap_or_else(|log| panic!("{log}"));
 
-    #[rustfmt::skip]
-    let cube_positions: &[Vec3] = &[
-        vec3( 0.0,  0.0,  0.0 ),
-        vec3( 2.0,  5.0, -15.0),
-        vec3(-1.5, -2.2, -2.5 ),
-        vec3(-3.8, -2.0, -12.3),
-        vec3( 2.4, -0.4, -3.5 ),
-        vec3(-1.7,  3.0, -7.5 ),
-        vec3( 1.3, -2.0, -2.5 ),
-        vec3( 1.5,  2.0, -2.5 ),
-        vec3( 1.5,  0.2, -1.5 ),
-        vec3(-1.3,  1.0, -1.5 ),
-    ];
+    let emitter_shader: Shader = Shader::new(&[
+        ("src/shaders/vertex.glsl", ShaderType::VertexShader),
+        (
+            "src/shaders/emitter_fragment.glsl",
+            ShaderType::FragmentShader,
+        ),
+    ])
+    .unwrap_or_else(|log| panic!("{log}"));
 
     let mut last_frame = 0.;
     while !window.should_close() {
@@ -96,20 +98,34 @@ fn render_loop(
         // Rendering ----------------------------
         unsafe {
             // Clear the color buffer with a specified color
-            gl::ClearColor(0.2, 0.2, 0.2, 1.);
+            let bg_color = Color::from_hex(0x191919);
+            gl::ClearColor(
+                bg_color.red().normalize(),
+                bg_color.green().normalize(),
+                bg_color.blue().normalize(),
+                bg_color.alpha().normalize(),
+            );
             gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
 
             // Draw elements
             // Set shader program to use
-            shader_program.use_program();
+            scene_shader.use_program();
+
+            scene_shader
+                .set_uniform_3f(
+                    "light_color",
+                    light_color.red().normalize(),
+                    light_color.green().normalize(),
+                    light_color.blue().normalize(),
+                )
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            // Vertex coords -> World coords
+            let mut model_mat: Mat4 = glm::identity();
 
             // World coords -> View coords
             // Camera
             let view_mat = glm::look_at(&camera.pos, &(camera.pos + camera.front), &camera.up);
-
-            shader_program
-                .set_uniform_mat_4fv("view", view_mat)
-                .unwrap_or_else(|e| panic!("{e}"));
 
             // View coords -> Clip coords
             let proj_mat: Mat4 = glm::perspective(
@@ -119,27 +135,48 @@ fn render_loop(
                 100.,
             );
 
-            shader_program
+            scene_shader
+                .set_uniform_mat_4fv("model", model_mat)
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            scene_shader
+                .set_uniform_mat_4fv("view", view_mat)
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            scene_shader
                 .set_uniform_mat_4fv("projection", proj_mat)
                 .unwrap_or_else(|e| panic!("{e}"));
 
-            for (i, pos) in cube_positions.iter().enumerate() {
-                // Vertex coords -> World coords
-                let mut model_mat: Mat4 = glm::identity();
+            cube.draw();
 
-                // Translate each cube by the pos vector and then rotate it
-                model_mat = glm::translate(&model_mat, pos);
+            // Set light color
+            emitter_shader.use_program();
 
-                let angle = 20. * i as f32;
-                model_mat = glm::rotate(&model_mat, f32::to_radians(angle), &vec3(1., 0.3, 0.5));
+            emitter_shader
+                .set_uniform_3f(
+                    "light_color",
+                    light_color.red().normalize(),
+                    light_color.green().normalize(),
+                    light_color.blue().normalize(),
+                )
+                .unwrap_or_else(|e| panic!("{e}"));
 
-                // Assign the new model matrix and render
-                shader_program
-                    .set_uniform_mat_4fv("model", model_mat)
-                    .unwrap_or_else(|e| panic!("{e}"));
+            // Translate the light
+            model_mat = glm::translate(&model_mat, &light_position);
+            model_mat = glm::scale(&model_mat, &light_scale);
+            emitter_shader
+                .set_uniform_mat_4fv("model", model_mat)
+                .unwrap_or_else(|e| panic!("{e}"));
 
-                cube.draw();
-            }
+            emitter_shader
+                .set_uniform_mat_4fv("view", view_mat)
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            emitter_shader
+                .set_uniform_mat_4fv("projection", proj_mat)
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            light.draw();
         }
         // Rendering ----------------------------
 
@@ -181,6 +218,13 @@ fn process_input(
         let camera_right = glm::normalize(&glm::cross(&camera.front, &camera.up));
 
         camera.pos += camera_right * velocity;
+    }
+
+    if window.get_key(Key::Space) == Action::Press {
+        camera.pos += camera.up * velocity;
+    }
+    if window.get_key(Key::LeftControl) == Action::Press {
+        camera.pos -= camera.up * velocity;
     }
 
     // Discrete events
