@@ -1,6 +1,7 @@
 use std::{ffi::CString, fs::read_to_string, ptr::null_mut};
 
 use gl::types::GLint;
+use glm::Vec3;
 use nalgebra_glm::Mat4;
 
 #[derive(Clone, Copy)]
@@ -185,6 +186,14 @@ impl Shader {
     ) -> Result<(), String> {
         unsafe { gl::Uniform3f(self.get_uniform_location(uniform)?, val1, val2, val3) };
         Ok(())
+    }
+
+    pub fn set_uniform_vec3(
+        &self,
+        uniform: &str,
+        vec: Vec3,
+    ) -> Result<(), String> {
+        self.set_uniform_3f(uniform, vec.x, vec.y, vec.z)
     }
 
     /// Sets the value of a vec4 float uniform

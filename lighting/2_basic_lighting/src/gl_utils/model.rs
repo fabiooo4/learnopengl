@@ -1,4 +1,4 @@
-use glm::{Vec3, vec3};
+use glm::{Vec2, Vec3, vec2, vec3};
 use proc_macros::VertexLayout;
 use std::ffi::c_void;
 
@@ -13,12 +13,23 @@ pub struct Vertex {
     pub position: Vec3,
 
     #[layout(location = 1, elements = 3)]
+    pub normal: Vec3,
+
+    #[layout(location = 2, elements = 2)]
+    pub texture: Vec2,
+
+    #[layout(location = 3, elements = 3)]
     pub color: Vec3,
 }
 
 impl Vertex {
-    pub fn new(position: Vec3, color: Vec3) -> Self {
-        Vertex { position, color }
+    pub fn new(position: Vec3, normal: Vec3, texture: Vec2, color: Vec3) -> Self {
+        Vertex {
+            position,
+            normal,
+            texture,
+            color,
+        }
     }
 }
 
@@ -103,46 +114,48 @@ pub struct Cube {
 
 impl Cube {
     fn vertices(color: Color) -> Vec<Vertex> {
-        let color: Vec3 = color.into();
+        let color = color.into();
 
-        vec![
-            Vertex::new(vec3(-0.5, -0.5, -0.5), color),
-            Vertex::new(vec3(0.5, -0.5, -0.5), color),
-            Vertex::new(vec3(0.5, 0.5, -0.5), color),
-            Vertex::new(vec3(0.5, 0.5, -0.5), color),
-            Vertex::new(vec3(-0.5, 0.5, -0.5), color),
-            Vertex::new(vec3(-0.5, -0.5, -0.5), color),
-            Vertex::new(vec3(-0.5, -0.5, 0.5), color),
-            Vertex::new(vec3(0.5, -0.5, 0.5), color),
-            Vertex::new(vec3(0.5, 0.5, 0.5), color),
-            Vertex::new(vec3(0.5, 0.5, 0.5), color),
-            Vertex::new(vec3(-0.5, 0.5, 0.5), color),
-            Vertex::new(vec3(-0.5, -0.5, 0.5), color),
-            Vertex::new(vec3(-0.5, 0.5, 0.5), color),
-            Vertex::new(vec3(-0.5, 0.5, -0.5), color),
-            Vertex::new(vec3(-0.5, -0.5, -0.5), color),
-            Vertex::new(vec3(-0.5, -0.5, -0.5), color),
-            Vertex::new(vec3(-0.5, -0.5, 0.5), color),
-            Vertex::new(vec3(-0.5, 0.5, 0.5), color),
-            Vertex::new(vec3(0.5, 0.5, 0.5), color),
-            Vertex::new(vec3(0.5, 0.5, -0.5), color),
-            Vertex::new(vec3(0.5, -0.5, -0.5), color),
-            Vertex::new(vec3(0.5, -0.5, -0.5), color),
-            Vertex::new(vec3(0.5, -0.5, 0.5), color),
-            Vertex::new(vec3(0.5, 0.5, 0.5), color),
-            Vertex::new(vec3(-0.5, -0.5, -0.5), color),
-            Vertex::new(vec3(0.5, -0.5, -0.5), color),
-            Vertex::new(vec3(0.5, -0.5, 0.5), color),
-            Vertex::new(vec3(0.5, -0.5, 0.5), color),
-            Vertex::new(vec3(-0.5, -0.5, 0.5), color),
-            Vertex::new(vec3(-0.5, -0.5, -0.5), color),
-            Vertex::new(vec3(-0.5, 0.5, -0.5), color),
-            Vertex::new(vec3(0.5, 0.5, -0.5), color),
-            Vertex::new(vec3(0.5, 0.5, 0.5), color),
-            Vertex::new(vec3(0.5, 0.5, 0.5), color),
-            Vertex::new(vec3(-0.5, 0.5, 0.5), color),
-            Vertex::new(vec3(-0.5, 0.5, -0.5), color),
-        ]
+        #[rustfmt::skip]
+        let res = vec![
+           Vertex::new(vec3(-0.5, -0.5, -0.5), vec3( 0.0,  0.0, -1.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5, -0.5, -0.5), vec3( 0.0,  0.0, -1.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5,  0.5, -0.5), vec3( 0.0,  0.0, -1.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5,  0.5, -0.5), vec3( 0.0,  0.0, -1.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5,  0.5, -0.5), vec3( 0.0,  0.0, -1.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5, -0.5, -0.5), vec3( 0.0,  0.0, -1.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5, -0.5,  0.5), vec3( 0.0,  0.0,  1.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5, -0.5,  0.5), vec3( 0.0,  0.0,  1.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5,  0.5,  0.5), vec3( 0.0,  0.0,  1.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5,  0.5,  0.5), vec3( 0.0,  0.0,  1.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5,  0.5,  0.5), vec3( 0.0,  0.0,  1.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5, -0.5,  0.5), vec3( 0.0,  0.0,  1.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5,  0.5,  0.5), vec3(-1.0,  0.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5,  0.5, -0.5), vec3(-1.0,  0.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5, -0.5, -0.5), vec3(-1.0,  0.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5, -0.5, -0.5), vec3(-1.0,  0.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5, -0.5,  0.5), vec3(-1.0,  0.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5,  0.5,  0.5), vec3(-1.0,  0.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5,  0.5,  0.5), vec3( 1.0,  0.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5,  0.5, -0.5), vec3( 1.0,  0.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5, -0.5, -0.5), vec3( 1.0,  0.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5, -0.5, -0.5), vec3( 1.0,  0.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5, -0.5,  0.5), vec3( 1.0,  0.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5,  0.5,  0.5), vec3( 1.0,  0.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5, -0.5, -0.5), vec3( 0.0, -1.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5, -0.5, -0.5), vec3( 0.0, -1.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5, -0.5,  0.5), vec3( 0.0, -1.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5, -0.5,  0.5), vec3( 0.0, -1.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5, -0.5,  0.5), vec3( 0.0, -1.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5, -0.5, -0.5), vec3( 0.0, -1.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5,  0.5, -0.5), vec3( 0.0,  1.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5,  0.5, -0.5), vec3( 0.0,  1.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5,  0.5,  0.5), vec3( 0.0,  1.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3( 0.5,  0.5,  0.5), vec3( 0.0,  1.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5,  0.5,  0.5), vec3( 0.0,  1.0,  0.0), vec2(0.0, 0.0), color),
+           Vertex::new(vec3(-0.5,  0.5, -0.5), vec3( 0.0,  1.0,  0.0), vec2(0.0, 0.0), color),
+        ];
+        res
     }
 
     pub fn new(color: Color) -> Self {

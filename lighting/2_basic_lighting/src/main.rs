@@ -60,6 +60,10 @@ fn render_loop(
     window.set_cursor_pos_polling(true);
     window.set_scroll_polling(true);
 
+    unsafe {
+        gl::Enable(gl::DEPTH_TEST);
+    }
+
     let mut delta_time;
     let mut camera = Camera::default();
     let mut mouse = MouseState::default();
@@ -112,12 +116,15 @@ fn render_loop(
             scene_shader.use_program();
 
             scene_shader
-                .set_uniform_3f(
-                    "light_color",
-                    light_color.red().normalize(),
-                    light_color.green().normalize(),
-                    light_color.blue().normalize(),
-                )
+                .set_uniform_vec3("light_color", Vec3::from(light_color).normalize())
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            scene_shader
+                .set_uniform_vec3("light_pos", light_position)
+                .unwrap_or_else(|e| panic!("{e}"));
+
+            scene_shader
+                .set_uniform_vec3("camera_pos", camera.pos)
                 .unwrap_or_else(|e| panic!("{e}"));
 
             // Vertex coords -> World coords
