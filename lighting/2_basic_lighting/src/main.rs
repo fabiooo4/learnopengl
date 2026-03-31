@@ -12,8 +12,8 @@ use gl::types::GLint;
 use glfw::{self, Action, Context, Key, PWindow, ffi::glfwGetTime};
 
 // Window
-const WIDTH: u32 = 800;
-const HEIGHT: u32 = 600;
+const INIT_WIDTH: u32 = 800;
+const INIT_HEIGHT: u32 = 600;
 const TITLE: &str = "HELLO BASIC LIGHTING!";
 
 // Mouse
@@ -35,7 +35,7 @@ impl Default for MouseState {
 
 fn main() {
     let (mut glfw, mut window, events) =
-        gl_utils::init_window(WIDTH, HEIGHT, TITLE, gl_utils::WindowMode::Windowed, None);
+        gl_utils::init_window(INIT_WIDTH, INIT_HEIGHT, TITLE, gl_utils::WindowMode::Windowed, None);
 
     println!("----------------------- KEYBINDS ------------------------");
     println!("          ESCAPE - Close the window");
@@ -135,8 +135,9 @@ fn render_loop(
             let view_mat = glm::look_at(&camera.pos, &(camera.pos + camera.front), &camera.up);
 
             // View coords -> Clip coords
+            let (width, height) = window.get_size();
             let proj_mat: Mat4 = glm::perspective(
-                WIDTH as f32 / HEIGHT as f32,
+                width as f32 / height as f32,
                 f32::to_radians(camera.fov),
                 0.1,
                 100.,
