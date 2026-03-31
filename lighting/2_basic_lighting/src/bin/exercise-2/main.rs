@@ -14,7 +14,7 @@ use glfw::{self, Action, Context, Key, PWindow, ffi::glfwGetTime};
 // Window
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
-const TITLE: &str = "HELLO BASIC LIGHTING!";
+const TITLE: &str = "Basic Lighting - Exercise 2";
 
 // Mouse
 const SENSITIVITY: f64 = 0.1;

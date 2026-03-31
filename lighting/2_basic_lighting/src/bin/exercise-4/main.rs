@@ -14,7 +14,7 @@ use glfw::{self, Action, Context, Key, PWindow, ffi::glfwGetTime};
 // Window
 const WIDTH: u32 = 800;
 const HEIGHT: u32 = 600;
-const TITLE: &str = "Basic Lighting - Exercise 1";
+const TITLE: &str = "Basic Lighting - Exercise 4";
 
 // Mouse
 const SENSITIVITY: f64 = 0.1;
@@ -39,7 +39,7 @@ fn main() {
 
     println!("Exercise instructions:");
     println!(
-        "Right now the light source is a boring static light source that doesn't move. Try to move the light source around the scene over time using either sin or cos. Watching the lighting change over time gives you a good understanding of Phong's lighting model"
+        "Implement Gouraud shading instead of Phong shading"
     );
 
     println!("----------------------- KEYBINDS ------------------------");
@@ -81,8 +81,8 @@ fn render_loop(
 
     // A shader program is the result of linking multiple compiled shaders
     let scene_shader: Shader = Shader::new(&[
-        ("src/shaders/vertex.glsl", ShaderType::VertexShader),
-        ("src/shaders/fragment.glsl", ShaderType::FragmentShader),
+        ("src/bin/exercise-4/shaders/vertex.glsl", ShaderType::VertexShader),
+        ("src/bin/exercise-4/shaders/fragment.glsl", ShaderType::FragmentShader),
     ])
     .unwrap_or_else(|log| panic!("{log}"));
 
@@ -174,7 +174,7 @@ fn render_loop(
                 .unwrap_or_else(|e| panic!("{e}"));
 
             // Translate the light
-            let light_angle = 100. * delta_time;
+            let light_angle = 5. * delta_time;
             light_position = glm::rotate_vec3(&light_position, f32::to_radians(light_angle), &vec3(0., 1., 0.));
             model_mat = glm::translate(&model_mat, &light_position);
             model_mat = glm::scale(&model_mat, &light_scale);
